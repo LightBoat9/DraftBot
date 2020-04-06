@@ -17,6 +17,7 @@ class DraftState(Enum):
     SECOND_PICK = 2
     SECOND_BAN = 3
     THIRD_PICK = 4
+    COMPLETE = 5
 
 class DraftSession():
     def __init__(self) -> None:
@@ -39,6 +40,9 @@ class DraftSession():
     @staticmethod
     def get_short_uuid() -> str:
         return uuid.uuid4().hex[:6]
+
+    def get_state() -> str:
+        return self.state[11:].lower()
 
     def check_captains(self) -> bool:
         return self.captain1 and self.captain2

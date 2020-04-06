@@ -48,6 +48,9 @@ async def on_message(message: Message) -> None:
 		elif command == "pick":
 			await pick_command(message)
 
+		elif command == "exit":
+			await exit_command(message)
+
 		else:
 			await channel.send("!" + command + " is not recognized as a command")
 
@@ -57,12 +60,28 @@ async def set_channel(message: Message) -> None:
 		await message.author.create_dm()
 
 async def help_command(message: Message) -> None:
-	await message.author.dm_channel.send(
-		"```!help : pull of this very dialog\n!draft : start a draft\n!join [session id] : join a draft```"
-	)
+	await message.author.dm_channel.send("""```
+		!help : pull of this very dialog\n
+                !draft : start a draft\n
+                !join [draft id] : join a draft\n
+                !ban [champion] : during ban phase used to ban a champion\n
+                !pick [champion] : during pick phase used to pick a champion\n
+                !exit : exit the current draft you are in
+	```""")
+	await message.author.dm_channel.send("""
+		`!help` : pull of this very dialog\n
+                `!draft` : start a draft\n
+                `!join [draft id]` : join a draft\n
+                `!ban [champion]` : during ban phase used to ban a champion\n
+                `!pick [champion]` : during pick phase used to pick a champion\n
+                `!exit` : exit the current draft you are in
+	""")
 
 async def draft_command(message: Message) -> None:
 	channel = message.author.dm_channel
+
+	if message.author.id in CAPTAINS.keys():
+            await channel.send("Sorry, you are already in a draft. Exit with `!exit`")
 
 	# creating session and adding it to active sessions
 	session = DraftSession()
@@ -78,20 +97,23 @@ async def join_command(message: Message) -> None:
 	channel = message.author.dm_channel
 	split_message = message.content.split(' ')
 
+	if message.author.id in CAPTAINS.keys():
+            await channel.send("Sorry, you are already in a draft. Exit with `!exit`")
+
 	# check if valid session
-	if split_message[1] in SESSIONS.keys():
-		session = SESSIONS[split_message[1]]
+	if split_message[1] not in SESSIONS.keys():
+            await channel.send("Sorry, `" + split_message[1] + "` is not a valid draft id.")
 
-		# prevent more than one person joining
-		if session.captain2:
-			await channel.send("Sorry, someone already joined " + split_message[1] + ".")
-			return
+        session = SESSIONS[split_message[1]]
 
-		session.captain2 = message.author
+        # prevent more than one person joining
+        if session.captain2:
+                await channel.send("Sorry, someone already joined " + split_message[1] + ".")
+                return
 
-		await start_draft(session)
-	else:
-		await channel.send(split_message[1] + " is not a valid session id.")
+        session.captain2 = message.author
+
+        await start_draft(session)
 
 async def start_draft(session: DraftSession) -> None:
 	await session.captain1.dm_channel.send(
@@ -134,24 +156,16 @@ async def ban_command(message: Message) -> None:
 		await channel.send("Waiting for opposing captain ban.")
 		return
 
-	await session.captain1.send(
-		"Bans are " + str(session.picks[session.state]) +
-		"\nPhase " + str(session.state) + ": " +
-		(
-			"Picks (Please pick with `!pick champ`)" if
-			session.state == DraftState.FIRST_PICK or session.state == DraftState.THIRD_PICK else
-			"Bans (Please ban with `!ban champ`)"
-		)
-	)
-	await session.captain2.send(
-		"Bans are " + str(session.picks[session.state]) +
-		"\nPhase " + str(session.state) + ": " +
-		(
-			"Picks (Please pick with `!pick champ`)" if
-			session.state == DraftState.FIRST_PICK or session.state == DraftState.THIRD_PICK else
-			"Bans (Please ban with `!ban champ`)"
-		)
-	)
+        bans = str(session.picks[session.state][session.captain1]) + " and " + str(session.picks[session.state][session.captain2])
+        next_phase = session.get_state()
+
+        if next_phase == "first_pick" or next_phase == "third_pick":
+            next_phase = next_phase + " (Please pick with `!pick champ`)"
+        else:
+            next_phase = next_phase + " (Please ban with `!ban champ`)"
+
+	await session.captain1.send("Bans are " + bans + next_phase)
+	await session.captain2.send("Bans are " + bans + next_phase)
 
 async def pick_command(message: Message) -> None:
 	channel = message.author.dm_channel
@@ -173,24 +187,25 @@ async def pick_command(message: Message) -> None:
 		await channel.send("Waiting for opposing captain pick.")
 		return
 
-	await session.captain1.send(
-		"Picks are " + str(session.picks[session.state]) +
-		"\nPhase " + str(session.state) + ": " +
-		(
-			"Bans (Please ban with `!ban champ`)" if
-			session.state == DraftState.SECOND_BAN else
-			"Picks (Please Picks with `!Picks champ`)"
-		)
-	)
-	await session.captain2.send(
-		"Picks are " + str(session.picks[session.state]) +
-		"\nPhase " + str(session.state) + ": " +
-		(
-			"Bans (Please ban with `!ban champ`)" if
-			session.state == DraftState.SECOND_BAN else
-			"Picks (Please Picks with `!Picks champ`)"
-		)
-	)
+        picks = str(session.picks[session.state][session.captain1]) + " and " + str(session.picks[session.state][session.captain2])
+        next_phase = session.get_state()
+
+        if next_phase == "second_ban":
+            next_phase = next_phase + " (Please ban with `!ban champ`)"
+        elif next_phase == "complete":
+            next_phase = "\nDraft is now complete"
+        else:
+            next_phase = next_phase + " (Please pick with `!pick champ`)"
+
+	await session.captain1.send("Picks are " + picks + next_phase)
+	await session.captain2.send("Picks are " + picks + next_phase)
+
+async def exit_command(message: Message) -> None:
+
+    if message.author.id not in CAPTAINS.keys():
+        await channel.send("You are not in a draft. Draft with `!draft`")
+
+    print("exiting")
 
 if __name__ == "__main__":
 	loop = asyncio.get_event_loop()
