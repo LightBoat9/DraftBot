@@ -41,7 +41,7 @@ class DraftSession():
         return uuid.uuid4().hex[:6]
 
     def check_captains(self) -> bool:
-        return self.captian1 and self.captain2
+        return self.captain1 and self.captain2
 
     def check_state(self) -> bool:
         return self.check_captains() and \
@@ -61,5 +61,3 @@ class DraftSession():
 
         if self.check_state():
             pass
-
-        self.session_id = uuid.uuid4()
