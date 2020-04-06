@@ -28,6 +28,13 @@ async def on_message(message: Message) -> None:
 	# print(message.author, message.content)
 	split_message = message.content.split(' ')
 
+	if message.content == COMMAND_PREFIX + "help":
+		channel = await set_channel(message)
+
+		await channel.send(
+			"```!help : pull of this very dialog\n!draft : start a draft\n!join [session id] : join an existing session```"
+		)
+
 	if message.content == COMMAND_PREFIX + "draft":
 		channel = await set_channel(message)
 
