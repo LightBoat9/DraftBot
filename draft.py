@@ -2,13 +2,8 @@ from discord import *
 import asyncio
 import json
 import random
-from session import DraftSession
 
 client: Client = Client()
-
-# Global Variables
-COMMAND_PREFIX = "!"
-SESSIONS = {}
 
 async def main() -> None:
 	# Open secrets file and start with bot token
