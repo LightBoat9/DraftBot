@@ -29,7 +29,7 @@ class DraftSession():
         unique_ids.append(self.session_id)
 
         self.state = DraftState.FIRST_BAN
-        self.captian1: User = None
+        self.captain1: User = None
         self.captain2: User = None
         self.picks: dict = {}
 
