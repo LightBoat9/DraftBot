@@ -62,3 +62,4 @@ class DraftSession():
         if self.check_state():
             pass
 
+        self.session_id = uuid.uuid4()
