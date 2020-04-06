@@ -3,7 +3,7 @@ import enum
 from discord import *
 
 CHAMP_LIST = [
-    "alysia", "ashka", "bakko", "blossum", "croak", "destiny", "ezmo", "freya", 
+    "alysia", "ashka", "bakko", "blossom", "croak", "destiny", "ezmo", "freya", 
     "iva", "jade", "jamila", "jumong", "lucie", "oldur", "pearl", "pestilus", 
     "poloma", "raigon", "rook", "ruh kaan", "shen rao", "shifu", "sirius",
     "taya", "thorn", "ulric", "varesh", "zander",
@@ -47,17 +47,21 @@ class DraftSession():
         return self.check_captains() and \
                 self.captain1.id in self.picks[self.state].keys() \
                 and self.captain2.id in self.picks[self.state].keys()
-                
-    def pick(self, captain_id: int, champ: str) -> bool:
-        if not self.check_captains():
-            return
 
+    def pick(self, captain_id: int, champ: str) -> bool:
         clean = champ.lower().strip()
 
-        if champ not in CHAMP_LIST:
-            raise ValueError("Unknown champion")
+        if clean not in CHAMP_LIST:
+            raise ValueError("Unknown Champion")
 
         self.picks[self.state][captain_id] = clean
 
         if self.check_state():
-            pass
+            if self.state == DraftState.FIRST_BAN:
+                self.state = DraftState.FIRST_PICK
+            elif self.state == DraftState.FIRST_PICK:
+                self.state = DraftState.SECOND_PICK
+            elif self.state == DraftState.SECOND_PICK:
+                self.state = DraftState.SECOND_BAN
+            elif self.state == DraftState.SECOND_BAN:
+                self.state = DraftState.THIRD_PICK
