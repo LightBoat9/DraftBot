@@ -33,7 +33,7 @@ async def on_message(message: Message) -> None:
     if message.author.bot:
         return
 
-    if not message.channel.id == 696551201642119208:
+    if not message.channel.id == 696551201642119208 or message.channel is DMChannel:
         return
 
     await message.delete()
