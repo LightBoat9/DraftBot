@@ -33,12 +33,12 @@ async def on_message(message: Message) -> None:
     if message.author.bot:
         return
 
-    if not message.channel.id == 696551201642119208 or message.channel is DMChannel:
+    if not message.channel.id == 696551201642119208 and message.channel is DMChannel:
         return
 
-    await message.delete()
-
-    print(message.content)
+    if not not message.channel.id == 696551201642119208:
+        await message.delete()
+    
     if message.content[0] == COMMAND_PREFIX:
         await set_channel(message)
         command = message.content.split(' ')[0][1:]
