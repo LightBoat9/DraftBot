@@ -216,16 +216,13 @@ async def pick_command(message: Message) -> None:
         session.table.del_row(4)
         session.table.add_row([phase.capitalize(), pick1, pick2])
 
-    await session.captain1.send("```\n" + str(session.table) + "```")
-    await session.captain2.send("```\n" + str(session.table) + "```")
-
     session.advance_state()
     next_phase = str(session.state)[11:].lower()
 
     # check if draft is over
     if next_phase == "complete":
-        await session.captain1.send("Draft is now complete")
-        await session.captain2.send("Draft is now complete")
+        await session.captain1.send("```\n" + str(session.table) + "```\n" + "Draft is now complete")
+        await session.captain2.send("```\n" + str(session.table) + "```\n" + "Draft is now complete")
         close_session(session)
         return
 
@@ -234,8 +231,8 @@ async def pick_command(message: Message) -> None:
     else:
         next_phase = next_phase + " (Please pick with `!pick champ`)"
 
-    await session.captain1.send(next_phase)
-    await session.captain2.send(next_phase)
+    await session.captain1.send("```\n" + str(session.table) + "```\n" + next_phase)
+    await session.captain2.send("```\n" + str(session.table) + "```\n" + next_phase)
 
 def close_session(session: DraftSession) -> None:
     del SESSIONS[CAPTAINS[session.captain1.id]]
