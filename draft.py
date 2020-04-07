@@ -3,6 +3,7 @@ import asyncio
 import json
 import random
 from session import DraftSession, DraftState
+#import errors
 
 client: Client = Client()
 
@@ -145,10 +146,23 @@ async def pick_command(message: Message) -> None:
             await channel.send("Sorry, you are not currently banning. Try `!pick champ`")
         return
 
+    # pick
     try:
         session.pick(message.author.id, split_message[1])
-    except ValueError:
+    except NonexistantChampion:
         await channel.send(split_message[1] + " is not a valid champ, Luke.")
+        return
+    except BannedChampion:
+        await channel.send(split_message[1] + " is banned by the opposing captain")
+        return
+    except DuplicateChampion:
+        await channel.send(split_message[1] + " is already picked")
+        return
+    except DuplicateBan:
+        await channel.send(split_message[1] + " is already banned")
+        return
+    except LateBan:
+        await channel.send(split_message[1] + " is picked by the opposing captain")
         return
 
     if not session.check_state():

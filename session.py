@@ -1,6 +1,7 @@
 import uuid
 import enum
 from discord import *
+import errors
 
 CHAMP_LIST = [
     "alysia", "ashka", "bakko", "blossom", "croak", "destiny", "ezmo", "freya", 
@@ -72,8 +73,52 @@ class DraftSession():
 
     def pick(self, captain_id: int, champ: str) -> None:
         clean = champ.lower().strip()
+        enemy_captain_id = self.captain1.id if self.captain1.id != captain_id else self.captain2.id
+
+        picks = []
+        bans = []
+        enemy_picks = []
+        enemy_bans = []
+
+        pick_states = [DraftState.FIRST_PICK, DraftState.SECOND_PICK, DraftState.THIRD_PICK]
+        ban_states = [DraftState.FIRST_BAN, DraftState.SECOND_BAN]
+
+        for pick_state in pick_states:
+            if captain_id in self.picks[pick_state].keys():
+                picks.append(self.picks[pick_state][captain_id])
+            if enemy_captain_id in self.picks[pick_state].keys():
+                enemy_picks.append(self.picks[pick_state][enemy_captain_id])
+
+        for ban_state in ban_states:
+            if captain_id in self.picks[ban_state].keys():
+                bans.append(self.picks[ban_state][captain_id])
+            if enemy_captain_id in self.picks[ban_state].keys():
+                enemy_bans.append(self.picks[ban_state][enemy_captain_id])
+
+        print(picks, bans, enemy_picks, enemy_bans, sep='\n')
 
         if clean not in CHAMP_LIST:
-            raise ValueError("Champ does not exist")
+            raise NonexistantChampion("Nonexistant Champion")
+
+        if self.state == DraftState.FIRST_PICK and clean in enemy_bans:
+            raise BannedChampion("Banned Champion")
+
+        if self.state == DraftState.SECOND_PICK and clean in enemy_bans:
+            raise BannedChampion("Banned Champion")
+
+        if self.state == DraftState.SECOND_PICK and clean in picks:
+            raise DuplicateChampion("Duplicate Champion")
+
+        if self.state == DraftState.SECOND_BAN and clean in bans:
+            raise DuplicateBan("Duplicate Ban")
+
+        if self.state == DraftState.SECOND_BAN and clean in enemy_picks:
+            raise LateBan("Champion Already Picked")
+
+        if self.state == DraftState.THIRD_PICK and clean in enemy_bans:
+            raise BannedChampion("Banned Champion")
+
+        if self.state == DraftState.THIRD_PICK and clean in picks:
+            raise DuplicateChampion("Duplicate Champion")
 
         self.picks[self.state][captain_id] = clean
