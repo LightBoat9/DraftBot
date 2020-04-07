@@ -33,8 +33,10 @@ async def on_message(message: Message) -> None:
     if message.author.bot:
         return
 
-    if message.channel.id == 696551201642119208:
-        await message.delete()
+    if not message.channel.id == 696551201642119208:
+        return
+
+    await message.delete()
 
     print(message.content)
     if message.content[0] == COMMAND_PREFIX:
