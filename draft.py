@@ -194,29 +194,25 @@ async def pick_command(message: Message) -> None:
         session.table.add_row(["Pick", "...", "..."])
         session.table.add_row(["Ban", "...", "..."])
         session.table.add_row(["Pick", "...", "..."])
-
-    if session.state == DraftState.FIRST_PICK:
+    elif session.state == DraftState.FIRST_PICK:
         for i in range(4, 0, -1):
             session.table.del_row(i)
         session.table.add_row([phase.capitalize(), pick1, pick2])
         session.table.add_row(["Pick", "...", "..."])
         session.table.add_row(["Ban", "...", "..."])
         session.table.add_row(["Pick", "...", "..."])
-
-    if session.state == DraftState.SECOND_PICK:
+    elif session.state == DraftState.SECOND_PICK:
         for i in range(4, 1, -1):
             session.table.del_row(i)
         session.table.add_row([phase.capitalize(), pick1, pick2])
         session.table.add_row(["Ban", "...", "..."])
         session.table.add_row(["Pick", "...", "..."])
-
-    if session.state == DraftState.SECOND_BAN:
+    elif session.state == DraftState.SECOND_BAN:
         session.table.del_row(4)
         session.table.del_row(3)
         session.table.add_row([phase.capitalize(), pick1, pick2])
         session.table.add_row(["Pick", "...", "..."])
-
-    if session.state == DraftState.THIRD_PICK:
+    else session.state == DraftState.THIRD_PICK:
         session.table.del_row(4)
         session.table.add_row([phase.capitalize(), pick1, pick2])
 
@@ -230,6 +226,7 @@ async def pick_command(message: Message) -> None:
     if next_phase == "complete":
         await session.captain1.send("Draft is now complete")
         await session.captain2.send("Draft is now complete")
+        close_session(session)
         return
 
     if next_phase == "second_ban":
@@ -239,6 +236,11 @@ async def pick_command(message: Message) -> None:
 
     await session.captain1.send(next_phase)
     await session.captain2.send(next_phase)
+
+def close_session(session: DraftSession) -> None:
+    del SESSIONS[CAPTAINS[session.captain1.id]]
+    del CAPTAINS[session.captain1.id]
+    pass
 
 async def exit_command(message: Message) -> None:
 
