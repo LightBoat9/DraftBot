@@ -41,31 +41,39 @@ class DraftSession():
     def get_short_uuid() -> str:
         return uuid.uuid4().hex[:6]
 
-    def get_state() -> str:
-        return self.state[11:].lower()
+    # def get_state() -> str:
+    #     return self.state[11:].lower()
 
     def check_captains(self) -> bool:
         return self.captain1 and self.captain2
 
+    def advance_state(self) -> bool:
+        if self.state == DraftState.FIRST_BAN:
+            self.state = DraftState.FIRST_PICK
+            return True
+        elif self.state == DraftState.FIRST_PICK:
+            self.state = DraftState.SECOND_PICK
+            return True
+        elif self.state == DraftState.SECOND_PICK:
+            self.state = DraftState.SECOND_BAN
+            return True
+        elif self.state == DraftState.SECOND_BAN:
+            self.state = DraftState.THIRD_PICK
+            return True
+        elif self.state == DraftState.THIRD_PICK:
+            self.state = DraftState.COMPLETE
+            return True
+        return False
+
     def check_state(self) -> bool:
         return self.check_captains() and \
-                self.captain1.id in self.picks[self.state].keys() \
-                and self.captain2.id in self.picks[self.state].keys()
+                self.captain1.id in self.picks[self.state].keys() and \
+                self.captain2.id in self.picks[self.state].keys()
 
-    def pick(self, captain_id: int, champ: str) -> bool:
+    def pick(self, captain_id: int, champ: str) -> None:
         clean = champ.lower().strip()
 
         if clean not in CHAMP_LIST:
-            raise ValueError("Unknown Champion")
+            raise ValueError("Champ does not exist")
 
         self.picks[self.state][captain_id] = clean
-
-        if self.check_state():
-            if self.state == DraftState.FIRST_BAN:
-                self.state = DraftState.FIRST_PICK
-            elif self.state == DraftState.FIRST_PICK:
-                self.state = DraftState.SECOND_PICK
-            elif self.state == DraftState.SECOND_PICK:
-                self.state = DraftState.SECOND_BAN
-            elif self.state == DraftState.SECOND_BAN:
-                self.state = DraftState.THIRD_PICK
