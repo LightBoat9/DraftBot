@@ -270,6 +270,8 @@ async def close_session(message: Message) -> None:
     cap1 = None
     cap2 = None
 
+    await delete_dm_history(session)
+
     # remove other player
     if session.captain1:
         cap1 = session.captain1
