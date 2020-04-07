@@ -24,11 +24,17 @@ async def main() -> None:
 async def on_ready() -> None:
     print("Bot Online")
 
+    async for message in client.get_channel(696551201642119208).history():
+        await message.delete()
+
 @client.event
 async def on_message(message: Message) -> None:
     # print(message.author, message.content)
     if message.author.bot:
         return
+
+    if message.channel.id == 696551201642119208:
+        await message.delete()
 
     print(message.content)
     if message.content[0] == COMMAND_PREFIX:
