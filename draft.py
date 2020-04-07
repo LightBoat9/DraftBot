@@ -4,6 +4,7 @@ import json
 import random
 from session import DraftSession, DraftState
 from errors import *
+from prettytable import PrettyTable
 
 client: Client = Client()
 
@@ -120,15 +121,20 @@ async def join_command(message: Message) -> None:
     await start_draft(session)
 
 async def start_draft(session: DraftSession) -> None:
+    session.table.field_names = ["Captains", session.captain1.display_name, session.captain2.display_name]
+    session.table.add_row(["Ban", "...", "..."])
+    session.table.add_row(["Pick", "...", "..."])
+    session.table.add_row(["Pick", "...", "..."])
+    session.table.add_row(["Ban", "...", "..."])
+    session.table.add_row(["Pick", "...", "..."])
+
     await session.captain1.dm_channel.send(
-        "- STARTING DRAFT -\nCaptains: " +
-        "you" + " and " + session.captain2.display_name +
-        "\nPhase 1: Bans (Please ban with `!ban champ`)"
+        "- STARTING DRAFT -\n```\n" + str(session.table) +
+        "```\nPhase 1: Bans (Please ban with `!ban champ`)"
     )
     await session.captain2.dm_channel.send(
-        "- STARTING DRAFT -\nCaptains: " +
-        session.captain1.display_name + " and " + "you" +
-        "\nPhase 1: Bans (Please ban with `!ban champ`)"
+        "- STARTING DRAFT -\n```\n" + str(session.table) +
+        "```\nPhase 1: Bans (Please ban with `!ban champ`)"
     )
 
     CAPTAINS[session.captain1.id] = session.session_id
@@ -156,29 +162,67 @@ async def pick_command(message: Message) -> None:
 
     # pick
     try:
-        session.pick(message.author.id, split_message[1:])
+        session.pick(message.author.id, " ".join(split_message[1:]))
     except NonexistantChampion:
-        await channel.send(split_message[1:] + " is not a valid champ, Luke.")
+        await channel.send(" ".join(split_message[1:]) + " is not a valid champ, Luke.")
         return
     except BannedChampion:
-        await channel.send(split_message[1:] + " is banned by the opposing captain")
+        await channel.send(" ".join(split_message[1:]) + " is banned by the opposing captain")
         return
     except DuplicateChampion:
-        await channel.send(split_message[1:] + " is already picked")
+        await channel.send(" ".join(split_message[1:]) + " is already picked")
         return
     except DuplicateBan:
-        await channel.send(split_message[1:] + " is already banned")
+        await channel.send(" ".join(split_message[1:]) + " is already banned")
         return
     except LateBan:
-        await channel.send(split_message[1:] + " is picked by the opposing captain")
+        await channel.send(" ".join(split_message[1:]) + " is picked by the opposing captain")
         return
 
     if not session.check_state():
         await channel.send("Waiting for opposing captain's " + phase)
         return
 
-    picks = str(session.picks[session.state][session.captain1.id]) + " and " + \
-            str(session.picks[session.state][session.captain2.id])
+    pick1 = str(session.picks[session.state][session.captain1.id]).capitalize()
+    pick2 = str(session.picks[session.state][session.captain2.id]).capitalize()
+
+    if session.state == DraftState.FIRST_BAN:
+        for i in range(4, -1, -1):
+            session.table.del_row(i)
+        session.table.add_row([phase.capitalize(), pick1, pick2])
+        session.table.add_row(["Pick", "...", "..."])
+        session.table.add_row(["Pick", "...", "..."])
+        session.table.add_row(["Ban", "...", "..."])
+        session.table.add_row(["Pick", "...", "..."])
+
+    if session.state == DraftState.FIRST_PICK:
+        for i in range(4, 0, -1):
+            session.table.del_row(i)
+        session.table.add_row([phase.capitalize(), pick1, pick2])
+        session.table.add_row(["Pick", "...", "..."])
+        session.table.add_row(["Ban", "...", "..."])
+        session.table.add_row(["Pick", "...", "..."])
+
+    if session.state == DraftState.SECOND_PICK:
+        for i in range(4, 1, -1):
+            session.table.del_row(i)
+        session.table.add_row([phase.capitalize(), pick1, pick2])
+        session.table.add_row(["Ban", "...", "..."])
+        session.table.add_row(["Pick", "...", "..."])
+
+    if session.state == DraftState.SECOND_BAN:
+        session.table.del_row(4)
+        session.table.del_row(3)
+        session.table.add_row([phase.capitalize(), pick1, pick2])
+        session.table.add_row(["Pick", "...", "..."])
+
+    if session.state == DraftState.THIRD_PICK:
+        session.table.del_row(4)
+        session.table.add_row([phase.capitalize(), pick1, pick2])
+
+    await session.captain1.send("```\n" + str(session.table) + "```")
+    await session.captain2.send("```\n" + str(session.table) + "```")
+
     session.advance_state()
     next_phase = str(session.state)[11:].lower()
 
@@ -189,12 +233,12 @@ async def pick_command(message: Message) -> None:
         return
 
     if next_phase == "second_ban":
-        next_phase = "\n" + next_phase + " (Please ban with `!ban champ`)"
+        next_phase = next_phase + " (Please ban with `!ban champ`)"
     else:
-        next_phase = "\n" + next_phase + " (Please pick with `!pick champ`)"
+        next_phase = next_phase + " (Please pick with `!pick champ`)"
 
-    await session.captain1.send(phase.capitalize() + "s are " + picks + next_phase)
-    await session.captain2.send(phase.capitalize() + "s are " + picks + next_phase)
+    await session.captain1.send(next_phase)
+    await session.captain2.send(next_phase)
 
 async def exit_command(message: Message) -> None:
 

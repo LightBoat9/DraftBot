@@ -2,6 +2,7 @@ import uuid
 import enum
 from discord import *
 from errors import *
+from prettytable import PrettyTable
 
 CHAMP_LIST = [
     "alysia", "ashka", "bakko", "blossom", "croak", "destiny", "ezmo", "freya", 
@@ -34,6 +35,7 @@ class DraftSession():
         self.captain1: User = None
         self.captain2: User = None
         self.picks: dict = {}
+        self.table = PrettyTable()
 
         for key in DraftState:
             self.picks[key] = {}
@@ -41,9 +43,6 @@ class DraftSession():
     @staticmethod
     def get_short_uuid() -> str:
         return uuid.uuid4().hex[:6]
-
-    # def get_state() -> str:
-    #     return self.state[11:].lower()
 
     def check_captains(self) -> bool:
         return self.captain1 and self.captain2
