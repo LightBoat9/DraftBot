@@ -104,8 +104,10 @@ async def join_command(message: Message) -> None:
     channel = message.author.dm_channel
     split_message = message.content.split(' ')
 
+    # in the future discern from you existing in another draft and you joining your own draft
     if message.author.id in CAPTAINS.keys():
         await channel.send("Sorry, you are already in a draft. Exit with `!exit`")
+        return
 
     # check if valid session
     if split_message[1] not in SESSIONS.keys():
