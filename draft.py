@@ -265,11 +265,26 @@ async def delete_dm_history(session):
             if hist_message.author == client.user and "completetable" not in hist_message.content:
                 await hist_message.delete()
 
-def close_session(message: Message) -> None:
+async def close_session(message: Message) -> None:
+    session = SESSIONS[CAPTAINS[message.author.id]]
+    cap1 = None
+    cap2 = None
+
+    # remove other player
+    if session.captain1:
+        cap1 = session.captain1
+    if session.captain2:
+        cap2 = session.captain2
+
     if CAPTAINS[message.author.id] in SESSIONS.keys():
         del SESSIONS[CAPTAINS[message.author.id]]
-    del CAPTAINS[message.author.id]
-    pass
+
+    if cap1:
+        await cap1.dm_channel.send("Exiting draft.")
+        del CAPTAINS[cap1.id]
+    if cap2:
+        await cap2.dm_channel.send("Exiting draft.")
+        del CAPTAINS[cap2.id]
 
 async def exit_command(message: Message) -> None:
     channel = message.author.dm_channel
@@ -278,7 +293,7 @@ async def exit_command(message: Message) -> None:
         await channel.send("You are not in a draft. Draft with `!draft`")
         return
 
-    close_session(message)
+    await close_session(message)
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
