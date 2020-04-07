@@ -89,7 +89,8 @@ async def draft_command(message: Message) -> None:
 
     # creating session and adding it to active sessions
     session = DraftSession()
-    SESSIONS[str(session.session_id)] = session
+    CAPTAINS[message.author.id] = session.session_id
+    SESSIONS[session.session_id] = session
 
     await channel.send(
         "- SETTING UP DRAFT -\nShare Session ID with Opposing Captain\t>>>\t`" + str(session.session_id) + "`"
@@ -137,8 +138,10 @@ async def start_draft(session: DraftSession) -> None:
         "```\nPhase 1: Bans (Please ban with `!ban champ`)"
     )
 
-    CAPTAINS[session.captain1.id] = session.session_id
-    CAPTAINS[session.captain2.id] = session.session_id
+    if session.captain1.id in CAPTAINS.keys():
+        CAPTAINS[session.captain2.id] = session.session_id
+    else:
+        CAPTAINS[session.captain1.id] = session.session_id
 
 async def pick_command(message: Message) -> None:
     channel = message.author.dm_channel
@@ -212,7 +215,7 @@ async def pick_command(message: Message) -> None:
         session.table.del_row(3)
         session.table.add_row([phase.capitalize(), pick1, pick2])
         session.table.add_row(["Pick", "...", "..."])
-    else session.state == DraftState.THIRD_PICK:
+    else:
         session.table.del_row(4)
         session.table.add_row([phase.capitalize(), pick1, pick2])
 
@@ -223,7 +226,7 @@ async def pick_command(message: Message) -> None:
     if next_phase == "complete":
         await session.captain1.send("```\n" + str(session.table) + "```\n" + "Draft is now complete")
         await session.captain2.send("```\n" + str(session.table) + "```\n" + "Draft is now complete")
-        close_session(session)
+        close_session(message)
         return
 
     if next_phase == "second_ban":
@@ -234,17 +237,20 @@ async def pick_command(message: Message) -> None:
     await session.captain1.send("```\n" + str(session.table) + "```\n" + next_phase)
     await session.captain2.send("```\n" + str(session.table) + "```\n" + next_phase)
 
-def close_session(session: DraftSession) -> None:
-    del SESSIONS[CAPTAINS[session.captain1.id]]
-    del CAPTAINS[session.captain1.id]
+def close_session(message: Message) -> None:
+    if CAPTAINS[message.author.id] in SESSIONS.keys():
+        del SESSIONS[CAPTAINS[message.author.id]]
+    del CAPTAINS[message.author.id]
     pass
 
 async def exit_command(message: Message) -> None:
+    channel = message.author.dm_channel
 
     if message.author.id not in CAPTAINS.keys():
         await channel.send("You are not in a draft. Draft with `!draft`")
+        return
 
-    print("exiting")
+    close_session(message)
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
