@@ -95,7 +95,7 @@ class DraftSession():
             if enemy_captain_id in self.picks[ban_state].keys():
                 enemy_bans.append(self.picks[ban_state][enemy_captain_id])
 
-        print(picks, bans, enemy_picks, enemy_bans, sep='\n')
+        # print(picks, bans, enemy_picks, enemy_bans, sep='\n')
 
         if clean not in CHAMP_LIST:
             raise NonexistantChampion("Nonexistant Champion")

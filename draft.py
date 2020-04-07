@@ -156,21 +156,21 @@ async def pick_command(message: Message) -> None:
 
     # pick
     try:
-        session.pick(message.author.id, split_message[1])
+        session.pick(message.author.id, split_message[1:])
     except NonexistantChampion:
-        await channel.send(split_message[1] + " is not a valid champ, Luke.")
+        await channel.send(split_message[1:] + " is not a valid champ, Luke.")
         return
     except BannedChampion:
-        await channel.send(split_message[1] + " is banned by the opposing captain")
+        await channel.send(split_message[1:] + " is banned by the opposing captain")
         return
     except DuplicateChampion:
-        await channel.send(split_message[1] + " is already picked")
+        await channel.send(split_message[1:] + " is already picked")
         return
     except DuplicateBan:
-        await channel.send(split_message[1] + " is already banned")
+        await channel.send(split_message[1:] + " is already banned")
         return
     except LateBan:
-        await channel.send(split_message[1] + " is picked by the opposing captain")
+        await channel.send(split_message[1:] + " is picked by the opposing captain")
         return
 
     if not session.check_state():
