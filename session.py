@@ -1,7 +1,7 @@
 import uuid
 import enum
 from discord import *
-import errors
+from errors import *
 
 CHAMP_LIST = [
     "alysia", "ashka", "bakko", "blossom", "croak", "destiny", "ezmo", "freya", 

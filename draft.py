@@ -3,7 +3,7 @@ import asyncio
 import json
 import random
 from session import DraftSession, DraftState
-#import errors
+from errors import *
 
 client: Client = Client()
 
