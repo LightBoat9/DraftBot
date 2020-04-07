@@ -91,11 +91,13 @@ async def draft_command(message: Message) -> None:
     session = DraftSession()
     SESSIONS[str(session.session_id)] = session
 
+    session.captain1 = message.author
+    
+    await delete_dm_history(session)
+
     await channel.send(
         "- SETTING UP DRAFT -\nShare Session ID with Opposing Captain\t>>>\t`" + str(session.session_id) + "`"
     )
-
-    session.captain1 = message.author
 
 async def join_command(message: Message) -> None:
     channel = message.author.dm_channel
@@ -128,12 +130,14 @@ async def start_draft(session: DraftSession) -> None:
     session.table.add_row(["Ban", "...", "..."])
     session.table.add_row(["Pick", "...", "..."])
 
+    await delete_dm_history(session)
+
     await session.captain1.dm_channel.send(
-        "- STARTING DRAFT -\n```\n" + str(session.table) +
+        "- STARTING DRAFT -\n```drafttable\n" + str(session.table) +
         "```\nPhase 1: Bans (Please ban with `!ban champ`)"
     )
     await session.captain2.dm_channel.send(
-        "- STARTING DRAFT -\n```\n" + str(session.table) +
+        "- STARTING DRAFT -\n```drafttable\n" + str(session.table) +
         "```\nPhase 1: Bans (Please ban with `!ban champ`)"
     )
 
@@ -212,7 +216,7 @@ async def pick_command(message: Message) -> None:
         session.table.del_row(3)
         session.table.add_row([phase.capitalize(), pick1, pick2])
         session.table.add_row(["Pick", "...", "..."])
-    else session.state == DraftState.THIRD_PICK:
+    else:
         session.table.del_row(4)
         session.table.add_row([phase.capitalize(), pick1, pick2])
 
@@ -221,8 +225,10 @@ async def pick_command(message: Message) -> None:
 
     # check if draft is over
     if next_phase == "complete":
-        await session.captain1.send("```\n" + str(session.table) + "```\n" + "Draft is now complete")
-        await session.captain2.send("```\n" + str(session.table) + "```\n" + "Draft is now complete")
+        await delete_dm_history(session)
+        
+        await session.captain1.send("```completetable\n" + str(session.table) + "```\n" + "Draft is now complete")
+        await session.captain2.send("```completetable\n" + str(session.table) + "```\n" + "Draft is now complete")
         close_session(session)
         return
 
@@ -231,8 +237,30 @@ async def pick_command(message: Message) -> None:
     else:
         next_phase = next_phase + " (Please pick with `!pick champ`)"
 
-    await session.captain1.send("```\n" + str(session.table) + "```\n" + next_phase)
-    await session.captain2.send("```\n" + str(session.table) + "```\n" + next_phase)
+    if not session.captain1.dm_channel:
+        await session.captain1.create_dm()
+
+    await delete_dm_history(session)
+
+    await session.captain1.send("```drafttable\n" + str(session.table) + "```\n" + next_phase)
+    await session.captain2.send("```drafttable\n" + str(session.table) + "```\n" + next_phase)
+
+async def delete_dm_history(session):
+    if session.captain1:
+        if not session.captain1.dm_channel:
+            await session.captain2.create_dm()
+
+        async for hist_message in session.captain1.dm_channel.history():
+            if hist_message.author == client.user and "completetable" not in hist_message.content:
+                await hist_message.delete()
+
+    if session.captain2:
+        if not session.captain2.dm_channel:
+            await session.captain2.create_dm()
+
+        async for hist_message in session.captain2.dm_channel.history():
+            if hist_message.author == client.user and "completetable" not in hist_message.content:
+                await hist_message.delete()
 
 def close_session(session: DraftSession) -> None:
     del SESSIONS[CAPTAINS[session.captain1.id]]
