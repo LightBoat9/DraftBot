@@ -62,8 +62,6 @@ async def on_message(message: Message) -> None:
         await set_channel(message)
         command = message.content.split(' ')[0][1:]
 
-        print(command)
-
         if command in COMMANDS.keys():
             await COMMANDS[command](message)
         else:
