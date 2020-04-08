@@ -247,13 +247,13 @@ async def pick_command(message: Message) -> None:
     # check if draft is over
     if next_phase == "complete":
         await delete_dm_history(session)
-        await session.captain1.send("```css\n" + str(session.table) + "```\n" + "Draft is now complete")
-        await session.captain2.send("```css\n" + str(session.table) + "```\n" + "Draft is now complete")
+        await session.captain1.send("```css\n" + str(session.table) + "```")
+        await session.captain2.send("```css\n" + str(session.table) + "```")
 
         # update draft-channel table
         async for msg in draft_channel.history():
             if msg.content[7:13] == session.session_id:
-                await msg.edit(content="```fix\n" + str(session.table) + "```\n" + next_phase)
+                await msg.edit(content="```css\n" + str(session.table) + "```")
         await close_session(message)
         return
 
@@ -270,7 +270,7 @@ async def pick_command(message: Message) -> None:
     # update draft-channel table
     async for msg in draft_channel.history():
         if msg.content[7:13] == session.session_id:
-            await msg.edit(content="```fix\n" + str(session.table) + "```\n" + next_phase)
+            await msg.edit(content="```fix\n" + session.session_id + "\n"+ str(session.table) + "```")
 
 async def delete_dm_history(session):
     if session.captain1:
