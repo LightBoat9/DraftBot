@@ -14,6 +14,18 @@ SESSIONS = {}
 CAPTAINS = {}
 
 async def main() -> None:
+    global COMMANDS
+
+    # List of commands and their associated methods
+    COMMANDS = {
+        "help": help_command,
+        "draft": draft_command,
+        "join": join_command,
+        "ban": pick_command,
+        "join": pick_command,
+        "exit": exit_command,
+    }
+
     # Open secrets file and start with bot token
     token = ""
     with open("token.secret", "r") as f:
@@ -50,24 +62,10 @@ async def on_message(message: Message) -> None:
         await set_channel(message)
         command = message.content.split(' ')[0][1:]
 
-        if command == "help":
-            await help_command(message)
+        print(command)
 
-        elif command == "draft":
-            await draft_command(message)
-
-        elif command == "join":
-            await join_command(message)
-
-        elif command == "ban":
-            await pick_command(message)
-
-        elif command == "pick":
-            await pick_command(message)
-
-        elif command == "exit":
-            await exit_command(message)
-
+        if command in COMMANDS.keys():
+            await COMMANDS[command](message)
         else:
             channel = message.author.dm_channel
             await channel.send("!" + command + " is not recognized as a command")
