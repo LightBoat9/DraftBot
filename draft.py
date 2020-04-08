@@ -5,6 +5,7 @@ import random
 from session import DraftSession, DraftState
 from errors import *
 from prettytable import PrettyTable
+#from art import text2art
 
 client: Client = Client()
 
@@ -75,9 +76,9 @@ async def help_command(message: Message) -> None:
     await message.author.dm_channel.send(
         "`!help` : pull up this very dialog\n" \
         "`!draft` : start a draft\n" \
-        "`!join [draft id]` : join a draft\n" \
-        "`!ban [champion]` : during ban phase used to ban a champion\n" \
-        "`!pick [champion]` : during pick phase used to pick a champion\n" \
+        "`!join draft id` : join a draft\n" \
+        "`!ban champ` : during ban phase used to ban a champion\n" \
+        "`!pick champ` : during pick phase used to pick a champion\n" \
         "`!exit` : exit the current draft you are in"
     )
 
@@ -109,6 +110,10 @@ async def join_command(message: Message) -> None:
         await channel.send("Sorry, you are already in a draft. Exit with `!exit`")
         return
 
+    if len(split_message) == 1:
+        await channel.send("You did not specify a draft id. Try `!join [draft id]`")
+        return
+
     # check if valid session
     if split_message[1] not in SESSIONS.keys():
         await channel.send("Sorry, `" + split_message[1] + "` is not a valid draft id.")
@@ -135,14 +140,10 @@ async def start_draft(session: DraftSession) -> None:
 
     await delete_dm_history(session)
 
-    await session.captain1.dm_channel.send(
-        "- STARTING DRAFT -\n```drafttable\n" + str(session.table) +
-        "```\nPhase 1: Bans (Please ban with `!ban champ`)"
-    )
-    await session.captain2.dm_channel.send(
-        "- STARTING DRAFT -\n```drafttable\n" + str(session.table) +
-        "```\nPhase 1: Bans (Please ban with `!ban champ`)"
-    )
+    await session.captain1.dm_channel.send("- STARTING DRAFT -")
+    await session.captain1.dm_channel.send("```fix\n" + str(session.table) + "```\nPhase 1: Bans (Please ban with `!ban champ`)")
+    await session.captain2.dm_channel.send("- STARTING DRAFT -")
+    await session.captain2.dm_channel.send("```fix\n" + str(session.table) + "```\nPhase 1: Bans (Please ban with `!ban champ`)")
 
     if session.captain1.id in CAPTAINS.keys():
         CAPTAINS[session.captain2.id] = session.session_id
@@ -167,6 +168,10 @@ async def pick_command(message: Message) -> None:
             await channel.send("Sorry, you are not currently picking. Try `!ban champ`")
         else:
             await channel.send("Sorry, you are not currently banning. Try `!pick champ`")
+        return
+
+    if len(split_message) == 1:
+        await channel.send("You did not specify a champ. Try `!" + phase + " champ`")
         return
 
     # pick
@@ -231,24 +236,23 @@ async def pick_command(message: Message) -> None:
     # check if draft is over
     if next_phase == "complete":
         await delete_dm_history(session)
-        
-        await session.captain1.send("```completetable\n" + str(session.table) + "```\n" + "Draft is now complete")
-        await session.captain2.send("```completetable\n" + str(session.table) + "```\n" + "Draft is now complete")
-        close_session(session)
+        await session.captain1.send("```css\n" + str(session.table) + "```\n" + "Draft is now complete")
+        await session.captain2.send("```css\n" + str(session.table) + "```\n" + "Draft is now complete")
+        await close_session(message)
         return
 
     if next_phase == "second_ban":
-        next_phase = next_phase + " (Please ban with `!ban champ`)"
+        next_phase = next_phase + " (Please **ban** with `!ban champ`)"
     else:
-        next_phase = next_phase + " (Please pick with `!pick champ`)"
+        next_phase = next_phase + " (Please **pick** with `!pick champ`)"
 
-    if not session.captain1.dm_channel:
-        await session.captain1.create_dm()
+    # if not session.captain1.dm_channel:
+    #     await session.captain1.create_dm()
 
     await delete_dm_history(session)
 
-    await session.captain1.send("```drafttable\n" + str(session.table) + "```\n" + next_phase)
-    await session.captain2.send("```drafttable\n" + str(session.table) + "```\n" + next_phase)
+    await session.captain1.send("```fix\n" + str(session.table) + "```\n" + next_phase)
+    await session.captain2.send("```fix\n" + str(session.table) + "```\n" + next_phase)
 
 async def delete_dm_history(session):
     if session.captain1:
@@ -256,7 +260,7 @@ async def delete_dm_history(session):
             await session.captain2.create_dm()
 
         async for hist_message in session.captain1.dm_channel.history():
-            if hist_message.author == client.user and "completetable" not in hist_message.content:
+            if hist_message.author == client.user and hist_message.content[:6] != "```css":
                 await hist_message.delete()
 
     if session.captain2:
@@ -264,7 +268,7 @@ async def delete_dm_history(session):
             await session.captain2.create_dm()
 
         async for hist_message in session.captain2.dm_channel.history():
-            if hist_message.author == client.user and "completetable" not in hist_message.content:
+            if hist_message.author == client.user and hist_message.content[:6] != "```css":
                 await hist_message.delete()
 
 async def close_session(message: Message) -> None:
