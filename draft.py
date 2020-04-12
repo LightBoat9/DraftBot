@@ -49,13 +49,13 @@ async def on_ready() -> None:
 
 @client.event
 async def on_message(message: Message) -> None:
-    print(message.author, message.content)
     if message.author.bot:
         return
 
-    if not message.channel.id == DRAFT_CHANNEL_ID and message.channel is DMChannel:
+    if not message.channel.id == DRAFT_CHANNEL_ID and not type(message.channel) == DMChannel:
         return
 
+    print(message.author, message.content)
     content = message.content;
 
     if message.channel.id == DRAFT_CHANNEL_ID:
