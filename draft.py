@@ -12,6 +12,7 @@ client: Client = Client()
 COMMAND_PREFIX = "!"
 SESSIONS = {}
 CAPTAINS = {}
+DRAFT_CHANNEL_ID = 698678134085779466
 
 async def main() -> None:
     global COMMANDS
@@ -38,7 +39,7 @@ async def main() -> None:
 async def on_ready() -> None:
     reset_draft_channel = False
 
-    async for message in client.get_channel(696551201642119208).history():
+    async for message in client.get_channel(DRAFT_CHANNEL_ID).history():
         if not message.author.bot or reset_draft_channel:
             await message.delete()
         elif message.content[:6] == "```fix":
@@ -48,19 +49,21 @@ async def on_ready() -> None:
 
 @client.event
 async def on_message(message: Message) -> None:
-    # print(message.author, message.content)
+    print(message.author, message.content)
     if message.author.bot:
         return
 
-    if not message.channel.id == 696551201642119208 and message.channel is DMChannel:
+    if not message.channel.id == DRAFT_CHANNEL_ID and message.channel is DMChannel:
         return
 
-    if message.channel.id == 696551201642119208:
+    content = message.content;
+
+    if message.channel.id == DRAFT_CHANNEL_ID:
         await message.delete()
 
-    if message.content[0] == COMMAND_PREFIX:
+    if content[0] == COMMAND_PREFIX:
         await set_channel(message)
-        command = message.content.split(' ')[0][1:]
+        command = content.split(' ')[0][1:]
 
         if command in COMMANDS.keys():
             await COMMANDS[command](message)
@@ -148,7 +151,7 @@ async def start_draft(session: DraftSession) -> None:
     await session.captain2.dm_channel.send("```fix\n" + str(session.table) + "```\nPhase 1: Bans (Please ban with `!ban champ`)")
 
     # delete unfinished drafts and post draft
-    server_channel = client.get_channel(696551201642119208)
+    server_channel = client.get_channel(DRAFT_CHANNEL_ID)
     await server_channel.send("```fix\n" + session.session_id + "\n" + str(session.table) + "```")
 
     if session.captain1.id in CAPTAINS.keys():
@@ -158,7 +161,7 @@ async def start_draft(session: DraftSession) -> None:
 
 async def pick_command(message: Message) -> None:
     channel = message.author.dm_channel
-    draft_channel = client.get_channel(696551201642119208)
+    draft_channel = client.get_channel(DRAFT_CHANNEL_ID)
     split_message = message.content.split(' ')
     command = split_message[0][1:]
 
@@ -317,7 +320,7 @@ async def exit_command(message: Message) -> None:
 
     # delete draft table from draft-channel if session exists
     if CAPTAINS[message.author.id] in SESSIONS.keys():
-        async for msg in client.get_channel(696551201642119208).history():
+        async for msg in client.get_channel(DRAFT_CHANNEL_ID).history():
             if msg.content[7:13] == SESSIONS[CAPTAINS[message.author.id]].session_id:
                 await msg.delete()
                 break
