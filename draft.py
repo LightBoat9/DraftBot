@@ -52,7 +52,7 @@ async def on_message(message: Message) -> None:
     if message.author.bot:
         return
 
-    if not message.channel.id == DRAFT_CHANNEL_ID and not type(message.channel) == DMChannel:
+    if not message.channel.id == DRAFT_CHANNEL_ID and type(message.channel) is not DMChannel:
         return
 
     print(message.author, message.content)
