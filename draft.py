@@ -46,6 +46,8 @@ async def on_ready() -> None:
     async for message in client.get_channel(DRAFT_CHANNEL_ID).history():
         if not message.author.bot or reset_draft_channel:
             await message.delete()
+        elif message.content[10:20] == "INIT DRAFT":
+            await message.delete()
         elif message.embeds:
             if message.embeds[0].color.value == 16753152:
                 await message.delete()
@@ -268,14 +270,20 @@ async def pick_command(message: Message) -> None:
 
 async def delete_dm_history(session):
     async for hist_message in session.captain1.dm_channel.history():
-        if hist_message.embeds:
-            if hist_message.author == client.user and hist_message.embeds[0].color.value == 16753152:
+        if hist_message.author == client.user:
+            if hist_message.content[:6] != "```css" and not hist_message.embeds:
                 await hist_message.delete()
+            elif hist_message.embeds:
+                if hist_message.embeds[0].color.value != 3210243:
+                    await hist_message.delete()
 
     async for hist_message in session.captain2.dm_channel.history():
-        if hist_message.embeds:
-            if hist_message.author == client.user and hist_message.embeds[0].color.value == 16753152:
+        if hist_message.author == client.user:
+            if hist_message.content[:6] != "```css" and not hist_message.embeds:
                 await hist_message.delete()
+            elif hist_message.embeds:
+                if hist_message.embeds[0].color.value != 3210243:
+                    await hist_message.delete()
 
 async def close_session(message: Message) -> None:
     session = SESSIONS[CAPTAINS[message.author.id]]
