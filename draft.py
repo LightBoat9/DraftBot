@@ -100,7 +100,7 @@ async def help_command(message: Message) -> None:
 
 async def draft_command(message: Message) -> None:
     channel = message.author.dm_channel
-	draft_channel = client.get_channel(DRAFT_CHANNEL_ID)
+    draft_channel = client.get_channel(DRAFT_CHANNEL_ID)
 
     if message.author.id in CAPTAINS.keys():
         await channel.send("Sorry, you are already in a draft. Exit with `!exit`")
@@ -118,10 +118,10 @@ async def draft_command(message: Message) -> None:
     )
     await draft_channel.send('```' + session.session_id + '\nINIT DRAFT\n```')
 
-	async for msg in draft_channel.history():
-		if msg.content[3:9] == session.session_id:
-			session.draft_message_id = msg.id
-			break
+    async for msg in draft_channel.history():
+        if msg.content[3:9] == session.session_id:
+            session.draft_message_id = msg.id
+            break
 
 async def join_command(message: Message) -> None:
     channel = message.author.dm_channel
@@ -158,7 +158,7 @@ async def join_command(message: Message) -> None:
     await start_draft(session)
 
 async def start_draft(session: DraftSession) -> None:
-	session.update_table()
+    session.update_table()
 
     # delete history and message captains
     await delete_dm_history(session)
@@ -171,10 +171,10 @@ async def start_draft(session: DraftSession) -> None:
     # post draft to draft channel
     draft_channel = client.get_channel(DRAFT_CHANNEL_ID)
 
-	async for msg in draft_channel.history():
-		if msg.id == session.draft_message_id:
-			msg.edit(content = "", embed = session.table)
-			break
+    async for msg in draft_channel.history():
+        if msg.id == session.draft_message_id:
+            await msg.edit(content = "", embed = session.table)
+            break
 
 async def pick_command(message: Message) -> None:
     channel = message.author.dm_channel
@@ -224,13 +224,13 @@ async def pick_command(message: Message) -> None:
         await channel.send("Waiting for opposing captain's " + phase)
         return
 
-	session.update_table()
+    session.update_table()
     session.advance_state()
     next_phase = str(session.state)[11:].lower()
 
     # check if draft is over
     if next_phase == "complete":
-        session.table.color = '#30fc03'
+        session.table.color = 3210243
 
         # update dms
         await delete_dm_history(session)
@@ -242,7 +242,7 @@ async def pick_command(message: Message) -> None:
             if msg.embeds:
                 if msg.id == session.draft_message_id:
                     await msg.edit(embed = session.table)
-					break
+                    break
 
         await close_session(message)
         return
@@ -264,7 +264,7 @@ async def pick_command(message: Message) -> None:
         if msg.embeds:
             if msg.id == session.draft_message_id:
                 await msg.edit(embed = session.table)
-				break
+                break
 
 async def delete_dm_history(session):
     async for hist_message in session.captain1.dm_channel.history():

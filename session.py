@@ -35,21 +35,21 @@ class DraftSession():
         self.captain1: User = None
         self.captain2: User = None
         self.picks: dict = {}
-		self.draft_message_id: int = None
+        self.draft_message_id: int = None
 
-		# init table
+        # init table
         self.table = Embed(color = 16753152)
-    	self.table.add_field(name = "_Captains_", value = "Ban\nPick\nPick\nBan\nPick")
-		self.table.add_field(
-			name = "captain 1",
-			value = "----\n----\n----\n----\n----"
-		)
-		session.table.add_field(
-			name = "captain 2,
-			value = "----\n----\n----\n----\n----"
-		)
+        self.table.add_field(name = "_Captains_", value = "Ban\nPick\nPick\nBan\nPick")
+        self.table.add_field(
+            name = "**captain 1**",
+            value = "----\n----\n----\n----\n----"
+        )
+        self.table.add_field(
+            name = "**captain 2**",
+            value = "----\n----\n----\n----\n----"
+        )
 
-		# litterally no idea
+        # litterally no idea
         for key in DraftState:
             self.picks[key] = {}
 
@@ -109,7 +109,7 @@ class DraftSession():
 
         # print(picks, bans, enemy_picks, enemy_bans, sep='\n')
 
-		# checking for pick errors
+        # checking for pick errors
         if clean not in CHAMP_LIST:
             raise NonexistantChampion("Nonexistant Champion")
 
@@ -136,13 +136,29 @@ class DraftSession():
 
         self.picks[self.state][captain_id] = clean
 
-	def update_table(self) -> None:
-		session.table.add_field(
-			name = session.captain1.display_name,
-			value = "----\n----\n----\n----\n----"
-		)
-		session.table.add_field(
-			name = session.captain2.display_name,
-			value = "----\n----\n----\n----\n----"
-		)
-		return
+    def update_table(self) -> None:
+        champs1 = ["----" for i in range(5)]
+        champs2 = ["----" for i in range(5)]
+
+        c1 = 0
+        c2 = 0
+
+        for key in DraftState:
+            if self.picks[key]:
+                champs1[c1] = self.picks[key][self.captain1.id]
+                champs2[c2] = self.picks[key][self.captain2.id]
+            c1 += 1
+            c2 += 1
+
+        self.table.set_field_at(
+            index = 1,
+            name = "**" + self.captain1.display_name + "**",
+            value = "\n".join(champs1)
+        )
+        self.table.set_field_at(
+            index = 2,
+            name = "**" + self.captain2.display_name + "**",
+            value = "\n".join(champs2)
+        )
+
+        return
