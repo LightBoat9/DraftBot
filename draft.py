@@ -75,7 +75,7 @@ async def on_message(message: Message) -> None:
 
     if content[0] == COMMAND_PREFIX:
         await set_channel(message)
-        command = content.split(' ')[0][1:]
+        command = content.split(' ')[0][1:].lower()
 
         if command in COMMANDS.keys():
             await COMMANDS[command](message)
@@ -158,15 +158,7 @@ async def join_command(message: Message) -> None:
     await start_draft(session)
 
 async def start_draft(session: DraftSession) -> None:
-    session.table.add_field(name = "_Captains_", value = "Ban\nPick\nPick\nBan\nPick")
-    session.table.add_field(
-        name = session.captain1.display_name,
-        value = "----\n----\n----\n----\n----"
-    )
-    session.table.add_field(
-        name = session.captain2.display_name,
-        value = "----\n----\n----\n----\n----"
-    )
+	session.update_table()
 
     # delete history and message captains
     await delete_dm_history(session)
@@ -195,7 +187,7 @@ async def pick_command(message: Message) -> None:
         return
 
     session = SESSIONS[CAPTAINS[message.author.id]]
-    phase = "ban" if str(session.state)[-3:] == "BAN" else "pick"
+    phase = "ban" if str(session.state)[-3:].lower() == "ban" else "pick"
 
     # check if user input the correct command
     if phase != command:
@@ -232,57 +224,7 @@ async def pick_command(message: Message) -> None:
         await channel.send("Waiting for opposing captain's " + phase)
         return
 
-    pick1 = str(session.picks[session.state][session.captain1.id]).capitalize()
-    pick2 = str(session.picks[session.state][session.captain2.id]).capitalize()
-
-    print(str(session.picks))
-
-    # update the table
-    if session.state == DraftState.FIRST_BAN:
-        session.table.set_field_at(
-            index = 1,
-            name = session.captain1.display_name,
-            value = pick1 + "\n----\n----\n----\n----"
-        )
-        session.table.set_field_at(
-            index = 2,
-            name = session.captain2.display_name,
-            value = pick2 + "\n----\n----\n----\n----"
-        )
-
-        # for i in range(4, -1, -1):
-        #     session.table.del_row(i)
-        # session.table.add_row([phase.capitalize(), pick1, pick2])
-        # session.table.add_row(["Pick", "...", "..."])
-        # session.table.add_row(["Pick", "...", "..."])
-        # session.table.add_row(["Ban", "...", "..."])
-        # session.table.add_row(["Pick", "...", "..."])
-    elif session.state == DraftState.FIRST_PICK:
-        pass
-        # for i in range(4, 0, -1):
-        #     session.table.del_row(i)
-        # session.table.add_row([phase.capitalize(), pick1, pick2])
-        # session.table.add_row(["Pick", "...", "..."])
-        # session.table.add_row(["Ban", "...", "..."])
-        # session.table.add_row(["Pick", "...", "..."])
-    elif session.state == DraftState.SECOND_PICK:
-        pass
-        # for i in range(4, 1, -1):
-        #     session.table.del_row(i)
-        # session.table.add_row([phase.capitalize(), pick1, pick2])
-        # session.table.add_row(["Ban", "...", "..."])
-        # session.table.add_row(["Pick", "...", "..."])
-    elif session.state == DraftState.SECOND_BAN:
-        pass
-        # session.table.del_row(4)
-        # session.table.del_row(3)
-        # session.table.add_row([phase.capitalize(), pick1, pick2])
-        # session.table.add_row(["Pick", "...", "..."])
-    else:
-        pass
-        # session.table.del_row(4)
-        # session.table.add_row([phase.capitalize(), pick1, pick2])
-
+	session.update_table()
     session.advance_state()
     next_phase = str(session.state)[11:].lower()
 

@@ -35,9 +35,21 @@ class DraftSession():
         self.captain1: User = None
         self.captain2: User = None
         self.picks: dict = {}
-        self.table = Embed(color = 16753152)
 		self.draft_message_id: int = None
 
+		# init table
+        self.table = Embed(color = 16753152)
+    	self.table.add_field(name = "_Captains_", value = "Ban\nPick\nPick\nBan\nPick")
+		self.table.add_field(
+			name = "captain 1",
+			value = "----\n----\n----\n----\n----"
+		)
+		session.table.add_field(
+			name = "captain 2,
+			value = "----\n----\n----\n----\n----"
+		)
+
+		# litterally no idea
         for key in DraftState:
             self.picks[key] = {}
 
@@ -123,3 +135,14 @@ class DraftSession():
             raise DuplicateChampion("Duplicate Champion")
 
         self.picks[self.state][captain_id] = clean
+
+	def update_table(self) -> None:
+		session.table.add_field(
+			name = session.captain1.display_name,
+			value = "----\n----\n----\n----\n----"
+		)
+		session.table.add_field(
+			name = session.captain2.display_name,
+			value = "----\n----\n----\n----\n----"
+		)
+		return
