@@ -13,10 +13,12 @@ COMMAND_PREFIX = "!"
 SESSIONS = {}
 CAPTAINS = {}
 DRAFT_CHANNEL_ID = 696551201642119208
-# NAIL_BOT_ID = 704663040682885134
-NAIL_BOT_ID = 142008529417535490
-# dio server 698678134085779466
-# GVD server 696551201642119208
+GUILD = 599028066991341578
+NAIL_BOT_ID = 704663040682885134
+# dio channel 698678134085779466
+# GVD channel 696551201642119208
+# dio guild 599028066991341578
+# GVD guild 696542790942851132
 
 async def main() -> None:
     global COMMANDS
@@ -45,8 +47,6 @@ async def on_ready() -> None:
 
     async for message in client.get_channel(DRAFT_CHANNEL_ID).history():
         if not message.author.bot or reset_draft_channel:
-            await message.delete()
-        elif message.content[10:20] == "INIT DRAFT":
             await message.delete()
         elif message.embeds:
             if message.embeds[0].color.value == 16753152:
@@ -250,9 +250,10 @@ async def pick_command(message: Message) -> None:
 
         # dm nailbot if it was a naildraft
         if session.nail_draft:
-            nailbot = guild.get_member(NAIL_BOT_ID)
             champ_picks = session.get_champ_picks()
-            nailbot.dm_channel.send(str(session.session_id) + ' ' + ' '.join(champ_picks))
+            guild = client.get_guild(GUILD)
+            nailbot = guild.get_member(NAIL_BOT_ID)
+            await nailbot.dm_channel.send(str(session.session_id) + ' ' + ' '.join(champ_picks))
 
         await close_session(message)
         return
@@ -339,10 +340,9 @@ async def nailbot(message: Message) -> None:
 
     split_message = message.content.split(' ')
 
-    print(split_message)
-
-    captain1 = guild.get_member(split_message[1])
-    captain2 = guild.get_member(split_message[2])
+    guild = client.get_guild(GUILD)
+    captain1 = guild.get_member(int(split_message[1]))
+    captain2 = guild.get_member(int(split_message[2]))
 
     session = DraftSession()
     session.session_id = split_message[0]
@@ -352,6 +352,19 @@ async def nailbot(message: Message) -> None:
     CAPTAINS[session.captain1.id] = session.session_id
     CAPTAINS[session.captain2.id] = session.session_id
     SESSIONS[session.session_id] = session
+
+    if not captain1.dm_channel:
+        await captain1.create_dm()
+    if not captain2.dm_channel:
+        await captain2.create_dm()
+
+    draft_channel = client.get_channel(DRAFT_CHANNEL_ID)
+    await draft_channel.send('```' + session.session_id + '\nINIT DRAFT\n```')
+
+    async for msg in draft_channel.history():
+        if msg.content[3:3+len(str(session.session_id))] == session.session_id:
+            session.draft_message_id = msg.id
+            break
 
     await start_draft(session)
     return
