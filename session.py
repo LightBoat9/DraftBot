@@ -2,7 +2,6 @@ import uuid
 import enum
 from discord import *
 from errors import *
-# from prettytable import PrettyTable
 
 CHAMP_LIST = [
     "alysia", "ashka", "bakko", "blossom", "croak", "destiny", "ezmo", "freya", 

@@ -4,15 +4,13 @@ import json
 import random
 from session import DraftSession, DraftState
 from errors import *
-# from prettytable import PrettyTable
-#from art import text2art
 
 client: Client = Client()
 
 COMMAND_PREFIX = "!"
 SESSIONS = {}
 CAPTAINS = {}
-DRAFT_CHANNEL_ID = 696551201642119208
+DRAFT_CHANNEL_ID = 698678134085779466
 GUILD = 599028066991341578
 NAIL_BOT_ID = 704663040682885134
 # dio channel 698678134085779466
@@ -65,10 +63,6 @@ async def on_message(message: Message) -> None:
         return
 
     if not message.content:
-        return
-
-    # temp for testing new bot
-    if type(message.channel) is DMChannel:
         return
 
     if not message.channel.id == DRAFT_CHANNEL_ID and type(message.channel) is not DMChannel:
@@ -339,11 +333,10 @@ async def exit_command(message: Message) -> None:
     await close_session(message)
 
 async def nailbot(message: Message) -> None:
-    if not message.channel.id == 698678134085779466:
+    if not message.channel.id == DRAFT_CHANNEL_ID:
         return
 
     await message.delete()
-    print(message.author, message.content)
 
     split_message = message.content.split(' ')
 
