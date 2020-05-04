@@ -29,7 +29,9 @@ async def main() -> None:
         "draft": draft_command,
         "join": join_command,
         "ban": pick_command,
+        "b": pick_command,
         "pick": pick_command,
+        "p": pick_command,
         "exit": exit_command,
     }
 

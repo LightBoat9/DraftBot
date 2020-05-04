@@ -10,6 +10,7 @@ CHAMP_LIST = [
     "poloma", "raigon", "rook", "ruh kaan", "shen rao", "shifu", "sirius",
     "taya", "thorn", "ulric", "varesh", "zander",
 ]
+SHORT_CHAMP_DICT = ["dio": "pearl", "ruh": "ruh kaan", "rk": "ruh kaan", "shen": "shen rao"]
 
 unique_ids = []
 
@@ -109,6 +110,9 @@ class DraftSession():
                 enemy_bans.append(self.picks[ban_state][enemy_captain_id])
 
         # print(picks, bans, enemy_picks, enemy_bans, sep='\n')
+
+        if clean in SHORT_CHAMP_DICT:
+            clean = SHORT_CHAMP_DICT[clean]
 
         # checking for pick errors
         if clean not in CHAMP_LIST:
