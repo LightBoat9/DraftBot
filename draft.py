@@ -28,7 +28,6 @@ async def main() -> None:
         "ban": pick_command,
         "pick": pick_command,
         "exit": exit_command,
-        "draftbot": draftbot_command,
     }
 
     # Open secrets file and start with bot token
@@ -58,6 +57,8 @@ async def on_ready() -> None:
 async def on_message(message: Message) -> None:
     if message.author.bot:
         return
+    else:
+        nailbot(message)
 
     if not message.content:
         return
@@ -110,11 +111,10 @@ async def draft_command(message: Message) -> None:
 
     # creating session and adding it to active sessions
     session = DraftSession()
-    CAPTAINS[message.author.id] = session.session_id
+    session.captain1 = message.author
+    CAPTAINS[session.captain1.id] = session.session_id
     SESSIONS[session.session_id] = session
 
-    session.captain1 = message.author
-    
     await channel.send(
         "- SETTING UP DRAFT -\nShare Session ID with Opposing Captain\t>>>\t`" + str(session.session_id) + "`"
     )
@@ -246,6 +246,12 @@ async def pick_command(message: Message) -> None:
                     await msg.edit(embed = session.table)
                     break
 
+        # dm nailbot if it was a naildraft
+        if session.nail_draft:
+            nailbot = guild.get_member(NAIL_BOT_ID)
+            champ_picks = session.get_champ_picks()
+            nailbot.dm_channel.send(str(session.session_id) + ' ' + ' '.join(champ_picks))
+
         await close_session(message)
         return
 
@@ -325,50 +331,28 @@ async def exit_command(message: Message) -> None:
 
     await close_session(message)
 
-async def draftbot_command(message: Message) -> None:
-    if message.author.bot:
-        return
-
-    id_list = [110036995165691904, 197867406666760193, 292753642652696577, 142008529417535490, 149011134152704001, 170969927170260992, 166670770234195978]
-
+async def nailbot(message: Message) -> None:
     # if the dm is not from the bot exit
-    if type(message.channel) is DMChannel:
-        if message.channel.recipient.id not in id_list:
-            return
-    else:
+    if message.author.id != NAIL_BOT_ID:
         return
 
-    guild = client.get_guild(599028066991341578)
-    nailbot = guild.get_member(NAIL_BOT_ID)
-    dio = guild.get_member(292753642652696577)
-    deniz = guild.get_member(142008529417535490)
-    uni = guild.get_member(149011134152704001)
-    milk = guild.get_member(170969927170260992)
-    lepnix = guild.get_member(166670770234195978)
-    light = guild.get_member(197867406666760193)
-    luke = guild.get_member(110036995165691904)
+    if type(message.channel) is not DMChannel:
+        return
 
-    send = luke
-    send_message = True
+    split_message = message.content.split(' ')
 
-    num_message = 5
-    counter = 0
+    captain1 = guild.get_member(split_message[1])
+    captain2 = guild.get_member(split_message[2])
 
-    if not send_message:
-        async for msg in send.history():
-            counter += 1
-            if counter >= num_message:
-                break
-            print(msg.author, '-', msg.content)
+    session = DraftSession()
+    session.session_id = split_message[0]
+    session.captain1 = captain1
+    session.captain2 = captain2
+    CAPTAINS[session.captain1.id] = session.session_id
+    CAPTAINS[session.captain2.id] = session.session_id
+    SESSIONS[session.session_id] = session
 
-    if not send.dm_channel:
-        await send.create_dm()
-
-    if message.channel.recipient.id == 142008529417535490 and send_message:
-        await send.dm_channel.send(message.content)
-    else:
-        await deniz.dm_channel.send(str(message.author) + ' - ' + str(message.content))
-
+    await start_draft(session)
     return
 
 if __name__ == "__main__":

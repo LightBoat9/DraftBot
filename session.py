@@ -36,6 +36,7 @@ class DraftSession():
         self.captain2: User = None
         self.picks: dict = {}
         self.draft_message_id: int = None
+        self.nail_draft: bool = False
 
         # init table
         self.table = Embed(color = 16753152)
@@ -161,4 +162,15 @@ class DraftSession():
             value = "\n".join(champs2)
         )
 
-        return
+    def get_champ_picks(self) -> list:
+        champs = []
+
+        for key in DraftState:
+            if self.picks[key]:
+                champs.append(self.picks[key][self.captain1.id])
+                champs.append(self.picks[key][self.captain2.id])
+
+        champs[2], champs[6] = champs[6], champs[2]
+        champs[3], champs[7] = champs[7], champs[3]
+
+        return champs
