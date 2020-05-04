@@ -2,7 +2,7 @@ import uuid
 import enum
 from discord import *
 from errors import *
-from prettytable import PrettyTable
+# from prettytable import PrettyTable
 
 CHAMP_LIST = [
     "alysia", "ashka", "bakko", "blossom", "croak", "destiny", "ezmo", "freya", 
@@ -35,7 +35,7 @@ class DraftSession():
         self.captain1: User = None
         self.captain2: User = None
         self.picks: dict = {}
-        self.table = PrettyTable()
+        self.table = Embed(color = 16753152, footer = self.session_id)
 
         for key in DraftState:
             self.picks[key] = {}
