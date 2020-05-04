@@ -150,8 +150,8 @@ class DraftSession():
 
         for key in DraftState:
             if self.picks[key]:
-                champs1[c1] = self.picks[key][self.captain1.id]
-                champs2[c2] = self.picks[key][self.captain2.id]
+                champs1[c1] = self.picks[key][self.captain1.id].capitalize()
+                champs2[c2] = self.picks[key][self.captain2.id].capitalize()
             c1 += 1
             c2 += 1
 

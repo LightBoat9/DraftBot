@@ -251,11 +251,13 @@ async def pick_command(message: Message) -> None:
                     break
 
         # dm nailbot if it was a naildraft
+        misc_channel = client.get_channel(705836678891307089)
+        champ_picks = session.get_champ_picks()
         if session.nail_draft:
-            champ_picks = session.get_champ_picks()
-            guild = client.get_guild(GUILD)
-            nailbot = guild.get_member(NAIL_BOT_ID)
-            await nailbot.dm_channel.send(str(session.session_id) + ' ' + ' '.join(champ_picks))
+            await misc_channel.send(str(session.session_id) + ',' + ','.join(champ_picks))
+        else:
+            await misc_channel.send('0,' + ','.join(champ_picks))
+
 
         await close_session(message)
         return
@@ -337,8 +339,11 @@ async def exit_command(message: Message) -> None:
     await close_session(message)
 
 async def nailbot(message: Message) -> None:
-    # if type(message.channel) is not DMChannel:
-    #     return
+    if not message.channel.id == 698678134085779466:
+        return
+
+    await message.delete()
+    print(message.author, message.content)
 
     split_message = message.content.split(' ')
 
