@@ -35,7 +35,8 @@ class DraftSession():
         self.captain1: User = None
         self.captain2: User = None
         self.picks: dict = {}
-        self.table = Embed(color = 16753152, footer = self.session_id)
+        self.table = Embed(color = 16753152)
+		self.draft_message_id: int = None
 
         for key in DraftState:
             self.picks[key] = {}
@@ -96,6 +97,7 @@ class DraftSession():
 
         # print(picks, bans, enemy_picks, enemy_bans, sep='\n')
 
+		# checking for pick errors
         if clean not in CHAMP_LIST:
             raise NonexistantChampion("Nonexistant Champion")
 

@@ -46,8 +46,9 @@ async def on_ready() -> None:
     async for message in client.get_channel(DRAFT_CHANNEL_ID).history():
         if not message.author.bot or reset_draft_channel:
             await message.delete()
-        elif message.content[:6] == "```fix":
-            await message.delete()
+        elif message.embeds:
+            if message.embeds[0].color.value == 16753152:
+                await message.delete()
 
     print("Bot Online")
 
@@ -59,9 +60,9 @@ async def on_message(message: Message) -> None:
     if not message.content:
         return
 
-	# temp for testing new bot
-	if type(message.channel) is DMChannel:
-		return
+    # temp for testing new bot
+    if type(message.channel) is DMChannel:
+        return
 
     if not message.channel.id == DRAFT_CHANNEL_ID and type(message.channel) is not DMChannel:
         return
@@ -99,6 +100,7 @@ async def help_command(message: Message) -> None:
 
 async def draft_command(message: Message) -> None:
     channel = message.author.dm_channel
+	draft_channel = client.get_channel(DRAFT_CHANNEL_ID)
 
     if message.author.id in CAPTAINS.keys():
         await channel.send("Sorry, you are already in a draft. Exit with `!exit`")
@@ -111,11 +113,15 @@ async def draft_command(message: Message) -> None:
 
     session.captain1 = message.author
     
-    await delete_dm_history(session)
-
     await channel.send(
         "- SETTING UP DRAFT -\nShare Session ID with Opposing Captain\t>>>\t`" + str(session.session_id) + "`"
     )
+    await draft_channel.send('```' + session.session_id + '\nINIT DRAFT\n```')
+
+	async for msg in draft_channel.history():
+		if msg.content[3:9] == session.session_id:
+			session.draft_message_id = msg.id
+			break
 
 async def join_command(message: Message) -> None:
     channel = message.author.dm_channel
@@ -142,7 +148,7 @@ async def join_command(message: Message) -> None:
         await channel.send("Sorry, someone already joined " + split_message[1] + ".")
         return
 
-	# put captain into the draft
+    # put captain into the draft
     session.captain2 = message.author
     if session.captain1.id in CAPTAINS.keys():
         CAPTAINS[session.captain2.id] = session.session_id
@@ -152,42 +158,31 @@ async def join_command(message: Message) -> None:
     await start_draft(session)
 
 async def start_draft(session: DraftSession) -> None:
-	session.table.add_field(name = "_Captains_", value = "Ban\nPick\nPick\nBan\nPick")
-	session.table.add_field(
-		name = session.captain1.display_name,
-		value = "----\n----\n----\n----\n----"
-	)
-	session.table.add_field(
-		name = session.captain2.display_name,
-		value = "----\n----\n----\n----\n----"
-	)
-
-    # session.table.field_names = ["Captains", session.captain1.display_name, session.captain2.display_name]
-    # session.table.add_row(["Ban", "...", "..."])
-    # session.table.add_row(["Pick", "...", "..."])
-    # session.table.add_row(["Pick", "...", "..."])
-    # session.table.add_row(["Ban", "...", "..."])
-    # session.table.add_row(["Pick", "...", "..."])
+    session.table.add_field(name = "_Captains_", value = "Ban\nPick\nPick\nBan\nPick")
+    session.table.add_field(
+        name = session.captain1.display_name,
+        value = "----\n----\n----\n----\n----"
+    )
+    session.table.add_field(
+        name = session.captain2.display_name,
+        value = "----\n----\n----\n----\n----"
+    )
 
     # delete history and message captains
     await delete_dm_history(session)
 
-	await session.captain1.dm_channel.send("- STARTIND DRAFT -")
-	await session.captain1.dm_channel.send(embed = session.table)
-	await session.captain1.dm_channel.send("Phase 1: Bans (Please ban with `!ban champ`)")
-	await session.captain2.dm_channel.send("- STARTIND DRAFT -")
-	await session.captain2.dm_channel.send(embed = session.table)
-	await session.captain2.dm_channel.send("Phase 1: Bans (Please ban with `!ban champ`)")
-
-    # await session.captain1.dm_channel.send("- STARTING DRAFT -")
-    # await session.captain1.dm_channel.send("```fix\n" + str(session.table) + "```\nPhase 1: Bans (Please ban with `!ban champ`)")
-    # await session.captain2.dm_channel.send("- STARTING DRAFT -")
-    # await session.captain2.dm_channel.send("```fix\n" + str(session.table) + "```\nPhase 1: Bans (Please ban with `!ban champ`)")
+    await session.captain1.dm_channel.send("- STARTING DRAFT -", embed = session.table)
+    await session.captain1.dm_channel.send("Phase 1: Bans (Please ban with `!ban champ`)")
+    await session.captain2.dm_channel.send("- STARTING DRAFT -", embed = session.table)
+    await session.captain2.dm_channel.send("Phase 1: Bans (Please ban with `!ban champ`)")
 
     # post draft to draft channel
-    server_channel = client.get_channel(DRAFT_CHANNEL_ID)
-	await server_channel.send(embed = session.table)
-    # await server_channel.send("```fix\n" + session.session_id + "\n" + str(session.table) + "```")
+    draft_channel = client.get_channel(DRAFT_CHANNEL_ID)
+
+	async for msg in draft_channel.history():
+		if msg.id == session.draft_message_id:
+			msg.edit(content = "", embed = session.table)
+			break
 
 async def pick_command(message: Message) -> None:
     channel = message.author.dm_channel
@@ -240,20 +235,20 @@ async def pick_command(message: Message) -> None:
     pick1 = str(session.picks[session.state][session.captain1.id]).capitalize()
     pick2 = str(session.picks[session.state][session.captain2.id]).capitalize()
 
-	print(str(session.picks))
+    print(str(session.picks))
 
-	# update the table
+    # update the table
     if session.state == DraftState.FIRST_BAN:
-		session.table.set_field_at(
-			index = 1,
-			name = session.captain1.display_name,
-			value = pick1 + "\n----\n----\n----\n----"
-		)
-		session.table.set_field_at(
-			index = 2,
-			name = session.captain2.display_name,
-			value = pick2 + "\n----\n----\n----\n----"
-		)
+        session.table.set_field_at(
+            index = 1,
+            name = session.captain1.display_name,
+            value = pick1 + "\n----\n----\n----\n----"
+        )
+        session.table.set_field_at(
+            index = 2,
+            name = session.captain2.display_name,
+            value = pick2 + "\n----\n----\n----\n----"
+        )
 
         # for i in range(4, -1, -1):
         #     session.table.del_row(i)
@@ -263,7 +258,7 @@ async def pick_command(message: Message) -> None:
         # session.table.add_row(["Ban", "...", "..."])
         # session.table.add_row(["Pick", "...", "..."])
     elif session.state == DraftState.FIRST_PICK:
-		pass
+        pass
         # for i in range(4, 0, -1):
         #     session.table.del_row(i)
         # session.table.add_row([phase.capitalize(), pick1, pick2])
@@ -271,20 +266,20 @@ async def pick_command(message: Message) -> None:
         # session.table.add_row(["Ban", "...", "..."])
         # session.table.add_row(["Pick", "...", "..."])
     elif session.state == DraftState.SECOND_PICK:
-		pass
+        pass
         # for i in range(4, 1, -1):
         #     session.table.del_row(i)
         # session.table.add_row([phase.capitalize(), pick1, pick2])
         # session.table.add_row(["Ban", "...", "..."])
         # session.table.add_row(["Pick", "...", "..."])
     elif session.state == DraftState.SECOND_BAN:
-		pass
+        pass
         # session.table.del_row(4)
         # session.table.del_row(3)
         # session.table.add_row([phase.capitalize(), pick1, pick2])
         # session.table.add_row(["Pick", "...", "..."])
     else:
-		pass
+        pass
         # session.table.del_row(4)
         # session.table.add_row([phase.capitalize(), pick1, pick2])
 
@@ -293,17 +288,19 @@ async def pick_command(message: Message) -> None:
 
     # check if draft is over
     if next_phase == "complete":
-		session.table.color = 3210243
+        session.table.color = '#30fc03'
 
-		# update dms
+        # update dms
         await delete_dm_history(session)
         await session.captain1.send(embed = session.table)
         await session.captain2.send(embed = session.table)
 
         # update draft-channel
         async for msg in draft_channel.history():
-			if msg.embeds[0].footer == session.session_id:
-                await msg.edit(embed = session.table)
+            if msg.embeds:
+                if msg.id == session.draft_message_id:
+                    await msg.edit(embed = session.table)
+					break
 
         await close_session(message)
         return
@@ -315,22 +312,28 @@ async def pick_command(message: Message) -> None:
 
     await delete_dm_history(session)
 
-    await session.captain1.send(embed = session.table, next_phase)
-    await session.captain2.send(embed = session.table, next_phase)
+    await session.captain1.send(embed = session.table)
+    await session.captain1.send(next_phase)
+    await session.captain2.send(embed = session.table)
+    await session.captain2.send(next_phase)
 
     # update draft-channel table
     async for msg in draft_channel.history():
-		if msg.embeds[0].footer == session.session_id:
-            await msg.edit(embed = session.table)
+        if msg.embeds:
+            if msg.id == session.draft_message_id:
+                await msg.edit(embed = session.table)
+				break
 
 async def delete_dm_history(session):
-	async for hist_message in session.captain1.dm_channel.history():
-		if hist_message.author == client.user and hist_message.embeds[0].color == 16753152:
-			await hist_message.delete()
+    async for hist_message in session.captain1.dm_channel.history():
+        if hist_message.embeds:
+            if hist_message.author == client.user and hist_message.embeds[0].color.value == 16753152:
+                await hist_message.delete()
 
-	async for hist_message in session.captain2.dm_channel.history():
-		if hist_message.author == client.user and hist_message.embeds[0].color == 16753152:
-			await hist_message.delete()
+    async for hist_message in session.captain2.dm_channel.history():
+        if hist_message.embeds:
+            if hist_message.author == client.user and hist_message.embeds[0].color.value == 16753152:
+                await hist_message.delete()
 
 async def close_session(message: Message) -> None:
     session = SESSIONS[CAPTAINS[message.author.id]]
@@ -365,9 +368,10 @@ async def exit_command(message: Message) -> None:
     # delete draft table from draft-channel if session exists
     if CAPTAINS[message.author.id] in SESSIONS.keys():
         async for msg in client.get_channel(DRAFT_CHANNEL_ID).history():
-			if msg.embeds[0].footer == SESSIONS[CAPTAINS[message.author.id]].session_id:
-                await msg.delete()
-                break
+            if msg.embeds:
+                if msg.id == SESSIONS[CAPTAINS[message.author.id]].draft_message_id:
+                    await msg.delete()
+                    break
 
     await close_session(message)
 
