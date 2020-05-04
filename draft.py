@@ -13,7 +13,8 @@ COMMAND_PREFIX = "!"
 SESSIONS = {}
 CAPTAINS = {}
 DRAFT_CHANNEL_ID = 696551201642119208
-NAIL_BOT_ID = 704663040682885134
+# NAIL_BOT_ID = 704663040682885134
+NAIL_BOT_ID = 142008529417535490
 # dio server 698678134085779466
 # GVD server 696551201642119208
 
@@ -55,10 +56,11 @@ async def on_ready() -> None:
 
 @client.event
 async def on_message(message: Message) -> None:
+    if message.author.id == NAIL_BOT_ID:
+        await nailbot(message)
+
     if message.author.bot:
         return
-    else:
-        nailbot(message)
 
     if not message.content:
         return
@@ -332,20 +334,19 @@ async def exit_command(message: Message) -> None:
     await close_session(message)
 
 async def nailbot(message: Message) -> None:
-    # if the dm is not from the bot exit
-    if message.author.id != NAIL_BOT_ID:
-        return
-
-    if type(message.channel) is not DMChannel:
-        return
+    # if type(message.channel) is not DMChannel:
+    #     return
 
     split_message = message.content.split(' ')
+
+    print(split_message)
 
     captain1 = guild.get_member(split_message[1])
     captain2 = guild.get_member(split_message[2])
 
     session = DraftSession()
     session.session_id = split_message[0]
+    session.nail_draft = True
     session.captain1 = captain1
     session.captain2 = captain2
     CAPTAINS[session.captain1.id] = session.session_id
