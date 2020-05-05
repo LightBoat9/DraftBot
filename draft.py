@@ -325,10 +325,9 @@ async def exit_command(message: Message) -> None:
     # delete draft table from draft-channel if session exists
     if CAPTAINS[message.author.id] in SESSIONS.keys():
         async for msg in client.get_channel(DRAFT_CHANNEL_ID).history():
-            if msg.embeds:
-                if msg.id == SESSIONS[CAPTAINS[message.author.id]].draft_message_id:
-                    await msg.delete()
-                    break
+			if msg.id == SESSIONS[CAPTAINS[message.author.id]].draft_message_id:
+				await msg.delete()
+				break
 
     await close_session(message)
 
