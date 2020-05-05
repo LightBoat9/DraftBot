@@ -195,7 +195,7 @@ async def pick_command(message: Message) -> None:
     try:
         session.pick(message.author.id, " ".join(split_message[1:]))
     except NonexistantChampion:
-        await channel.send(" ".join(split_message[1:]) + " is not a valid champ.")
+        await channel.send(" ".join(split_message[1:]) + " is not a valid champ")
         return
     except BannedChampion:
         await channel.send(" ".join(split_message[1:]) + " is banned by the opposing captain")

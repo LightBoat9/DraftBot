@@ -9,7 +9,10 @@ CHAMP_LIST = [
     "poloma", "raigon", "rook", "ruh kaan", "shen rao", "shifu", "sirius",
     "taya", "thorn", "ulric", "varesh", "zander",
 ]
-SHORT_CHAMP_DICT = {"dio": "pearl", "ruh": "ruh kaan", "rk": "ruh kaan", "shen": "shen rao"}
+SHORT_CHAMP_DICT = {
+	"blos": "blossom", "pest": "pestilus", "dio": "pearl", 
+	"ruh": "ruh kaan", "rk": "ruh kaan", "shen": "shen rao"
+}
 
 unique_ids = []
 
