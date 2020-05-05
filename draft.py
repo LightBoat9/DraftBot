@@ -10,13 +10,12 @@ client: Client = Client()
 COMMAND_PREFIX = "!"
 SESSIONS = {}
 CAPTAINS = {}
+
 DRAFT_CHANNEL_ID = 698678134085779466
 GUILD = 599028066991341578
 NAIL_BOT_ID = 704663040682885134
-# dio channel 698678134085779466
-# GVD channel 696551201642119208
-# dio guild 599028066991341578
-# GVD guild 696542790942851132
+# dio's draft_channel: 698678134085779466
+# GVD's draft_channel: 696551201642119208
 
 async def main() -> None:
     global COMMANDS
@@ -56,9 +55,6 @@ async def on_ready() -> None:
 
 @client.event
 async def on_message(message: Message) -> None:
-    if type(message.channel) is DMChannel:
-        return
-
     if message.author.id == NAIL_BOT_ID:
         await nailbot(message)
 
@@ -119,12 +115,6 @@ async def draft_command(message: Message) -> None:
     await channel.send(
         "- SETTING UP DRAFT -\nShare Session ID with Opposing Captain\t>>>\t`" + str(session.session_id) + "`"
     )
-    await draft_channel.send('```' + session.session_id + '\nINIT DRAFT\n```')
-
-    async for msg in draft_channel.history():
-        if msg.content[3:9] == session.session_id:
-            session.draft_message_id = msg.id
-            break
 
 async def join_command(message: Message) -> None:
     channel = message.author.dm_channel
@@ -173,11 +163,8 @@ async def start_draft(session: DraftSession) -> None:
 
     # post draft to draft channel
     draft_channel = client.get_channel(DRAFT_CHANNEL_ID)
-
-    async for msg in draft_channel.history():
-        if msg.id == session.draft_message_id:
-            await msg.edit(content = "", embed = session.table)
-            break
+    temp_message = await draft_channel.send(embed = session.table)
+    session.draft_message_id = temp_message.id
 
 async def pick_command(message: Message) -> None:
     channel = message.author.dm_channel
@@ -361,14 +348,6 @@ async def nailbot(message: Message) -> None:
         await captain1.create_dm()
     if not captain2.dm_channel:
         await captain2.create_dm()
-
-    draft_channel = client.get_channel(DRAFT_CHANNEL_ID)
-    await draft_channel.send('```' + session.session_id + '\nINIT DRAFT\n```')
-
-    async for msg in draft_channel.history():
-        if msg.content[3:3+len(str(session.session_id))] == session.session_id:
-            session.draft_message_id = msg.id
-            break
 
     await start_draft(session)
     return
