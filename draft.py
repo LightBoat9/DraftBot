@@ -56,6 +56,9 @@ async def on_ready() -> None:
 
 @client.event
 async def on_message(message: Message) -> None:
+    if type(message.channel) is DMChannel:
+        return
+
     if message.author.id == NAIL_BOT_ID:
         await nailbot(message)
 
@@ -276,21 +279,23 @@ async def pick_command(message: Message) -> None:
                 break
 
 async def delete_dm_history(session):
-    async for hist_message in session.captain1.dm_channel.history():
-        if hist_message.author == client.user:
-            if hist_message.content[:6] != "```css" and not hist_message.embeds:
-                await hist_message.delete()
-            elif hist_message.embeds:
-                if hist_message.embeds[0].color.value != 3210243:
+    if session.captain1:
+        async for hist_message in session.captain1.dm_channel.history():
+            if hist_message.author == client.user:
+                if hist_message.content[:6] != "```css" and not hist_message.embeds:
                     await hist_message.delete()
+                elif hist_message.embeds:
+                    if hist_message.embeds[0].color.value != 3210243:
+                        await hist_message.delete()
 
-    async for hist_message in session.captain2.dm_channel.history():
-        if hist_message.author == client.user:
-            if hist_message.content[:6] != "```css" and not hist_message.embeds:
-                await hist_message.delete()
-            elif hist_message.embeds:
-                if hist_message.embeds[0].color.value != 3210243:
+    if session.captain2:
+        async for hist_message in session.captain2.dm_channel.history():
+            if hist_message.author == client.user:
+                if hist_message.content[:6] != "```css" and not hist_message.embeds:
                     await hist_message.delete()
+                elif hist_message.embeds:
+                    if hist_message.embeds[0].color.value != 3210243:
+                        await hist_message.delete()
 
 async def close_session(message: Message) -> None:
     session = SESSIONS[CAPTAINS[message.author.id]]
@@ -325,9 +330,9 @@ async def exit_command(message: Message) -> None:
     # delete draft table from draft-channel if session exists
     if CAPTAINS[message.author.id] in SESSIONS.keys():
         async for msg in client.get_channel(DRAFT_CHANNEL_ID).history():
-			if msg.id == SESSIONS[CAPTAINS[message.author.id]].draft_message_id:
-				await msg.delete()
-				break
+            if msg.id == SESSIONS[CAPTAINS[message.author.id]].draft_message_id:
+                await msg.delete()
+                break
 
     await close_session(message)
 
