@@ -11,7 +11,10 @@ CHAMP_LIST = [
 ]
 SHORT_CHAMP_DICT = {
 	"blos": "blossom", "pest": "pestilus", "dio": "pearl", 
-	"ruh": "ruh kaan", "rk": "ruh kaan", "shen": "shen rao"
+	"ruh": "ruh kaan", "rk": "ruh kaan", "shen": "shen rao",
+	"luke": "freya", "dest": "destiny", "pol": "poloma",
+	"lucy": "lucie", "jam": "jamila", "jum": "jumong",
+	"var": "varesh", "uni": "jumong", "frog": "croak"
 }
 
 unique_ids = []
